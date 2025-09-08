@@ -1,18 +1,32 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+use App\Http\Controllers\AuthController;
 
-Route::get('/', function () {
-    return view('welcome');
+// ============ ROTA LOGIN ============
+Route::get('/login', fn() => view('login'))->name('login');
+Route::get('/register', fn() => view('register'));
+Route::get('/logout', fn() => view('logout'));
+
+// ============ AUTENTICAÇÃO ============
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout']);
+
+// ============ ROTA PÁGINAS SE LOGADO ============
+Route::group(['middleware'=>'auth'], function(){
+  Route::get('/', fn() => view('home'));
+  Route::get('/products', fn() => view('products'));
+  Route::get('/clients', fn() => view('clients'));
+  Route::get('/sales', fn() => view('sales'));
+  Route::get('/repairs', fn() => view('repairs'));
+
+  Route::get('/me', function (){
+    return response()->json([
+      'ok'   => true,
+      'user' => Auth::user(),
+    ]);
+  });
 });
