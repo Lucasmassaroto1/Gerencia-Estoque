@@ -8,3 +8,13 @@ CREATE DATABASE armazium CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 -- php artisan make:migration create_repairs_table
 
 -- php artisan migrate
+
+-- php artisan make:controller ProductController --model=Product --requests
+-- php artisan make:request ProductStoreRequest
+-- php artisan make:request ProductUpdateRequest
+-- php artisan make:resource ProductResource
+
+-- php artisan make:controller ClientController --model=Client
+-- php artisan make:controller SaleController   --model=Sale
+-- php artisan make:controller RepairController --model=Repair
+-- php artisan make:controller DashboardController

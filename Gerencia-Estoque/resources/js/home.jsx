@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Navbar from "./includes/navbar.jsx";
-import '../css/home.css';
+import api from "./lib/api.js";
+import "../css/home.css";
 
 function Home() {
   const [loading, setLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState(false);
   const [error, setError] = useState("");
 
   const [metrics, setMetrics] = useState({
@@ -20,58 +20,56 @@ function Home() {
   useEffect(() => {
     let canceled = false;
 
-    async function load() {
+    (async () => {
       setLoading(true);
       setError("");
 
       try {
         const [mRes, lRes] = await Promise.all([
-          fetch("/api/dashboard", {
-            headers: { Accept: "application/json" },
-          }),
-          fetch("/api/products?low=1&limit=5", {
-            headers: { Accept: "application/json" },
-          }),
+          api.get("/dashboard"),
+          api.get("/products", { params: { low: 1, per_page: 5 } }),
         ]);
+        if (canceled) return;
 
-        // Se não existir API ainda, cai em demo
-        if (!mRes.ok || !lRes.ok) throw new Error("API indisponível");
+        const m = mRes.data ?? {};
+        const list = Array.isArray(lRes.data?.data) ? lRes.data.data : [];
 
-        const mData = await mRes.json();
-        const lData = await lRes.json();
+        setMetrics({
+          salesToday: Number(m.salesToday || 0),
+          repairsToday: Number(m.repairsToday || 0),
+          revenueToday: Number(m.revenueToday || 0),
+          lowStockCount: Number(m.lowStockCount || 0),
+        });
+        setLowStock(list);
+      } catch (err) {
+        if (canceled) return;
 
-        if (!canceled) {
-          setMetrics({
-            salesToday: mData?.salesToday ?? 0,
-            repairsToday: mData?.repairsToday ?? 0,
-            revenueToday: mData?.revenueToday ?? 0,
-            lowStockCount: mData?.lowStockCount ?? 0,
-          });
-          setLowStock(Array.isArray(lData?.data) ? lData.data : (Array.isArray(lData) ? lData : []));
-        }
-      } catch (e) {
-        if (!canceled) {
-          setDemoMode(true);
-          setMetrics({
-            salesToday: 3,
-            repairsToday: 2,
-            revenueToday: 1299.9,
-            lowStockCount: 4,
-          });
-          setLowStock([
-            { id: 1, name: "SSD 1TB NVMe", sku: "SSD-1TB-NVME", stock: 2, min_stock: 3, category: "armazenamento" },
-            { id: 2, name: "Memória 16GB DDR4", sku: "RAM-16-DDR4", stock: 1, min_stock: 5, category: "memória" },
-            { id: 3, name: "Fonte 600W 80+ Bronze", sku: "PSU-600B", stock: 0, min_stock: 2, category: "energia" },
-            { id: 4, name: "Cabo HDMI 2.1", sku: "HDMI-21", stock: 5, min_stock: 8, category: "acessórios" },
-          ]);
-          setError("API não encontrada. Exibindo dados de demonstração.");
-        }
+        // NÃO redireciona. Só informa o erro.
+        const status = err?.response?.status;
+        const msg =
+          status === 401
+            ? "Não autenticado. Faça login para ver os dados."
+            : status === 404
+            ? "API não encontrada (verifique a rota /api/v1)."
+            : "Não foi possível carregar os dados agora.";
+        setError(msg);
+
+        // zera telas
+        setMetrics({ salesToday: 0, repairsToday: 0, revenueToday: 0, lowStockCount: 0 });
+        setLowStock([]);
+
+        // ajuda na inspeção
+        console.log("Dashboard error:", {
+          status,
+          data: err?.response?.data,
+          url: err?.config?.url,
+          baseURL: err?.config?.baseURL,
+        });
       } finally {
         if (!canceled) setLoading(false);
       }
-    }
+    })();
 
-    load();
     return () => { canceled = true; };
   }, []);
 
@@ -81,14 +79,9 @@ function Home() {
       <main className="container">
         <div className="title-row">
           <h1>Dashboard</h1>
-          {demoMode && <span className="badge">Demo mode</span>}
         </div>
 
-        {error && (
-          <div className="alert">
-            {error}
-          </div>
-        )}
+        {error && <div className="alert">{error}</div>}
 
         <section className="grid-cards">
           <div className="card">
@@ -97,14 +90,14 @@ function Home() {
           </div>
 
           <div className="card">
-            <div className="card-label">Consertos (hoje)</div>
+            <div className="card-label">Manutenções (hoje)</div>
             <div className="card-value">{loading ? "..." : metrics.repairsToday}</div>
           </div>
 
           <div className="card">
             <div className="card-label">Faturado (hoje)</div>
             <div className="card-value">
-              {loading ? "..." : `R$ ${metrics.revenueToday.toFixed(2).replace('.', ',')}`}
+              {loading ? "..." : `R$ ${Number(metrics.revenueToday).toFixed(2).replace(".", ",")}`}
             </div>
           </div>
 

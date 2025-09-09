@@ -30,3 +30,12 @@ Route::group(['middleware'=>'auth'], function(){
     ]);
   });
 });
+
+/* Route::view('/login', 'login')->name('login');
+Route::view('/register', 'register');
+
+Route::view('/', 'home');
+Route::view('/products', 'products');
+Route::view('/clients', 'clients');
+Route::view('/sales', 'sales');
+Route::view('/repairs', 'repairs'); */

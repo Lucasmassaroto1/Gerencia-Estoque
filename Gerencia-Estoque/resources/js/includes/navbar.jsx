@@ -11,8 +11,8 @@ export default function Navbar(){
         <a href="/products">Produtos</a>
         <a href="/clients">Clientes</a>
         <a href="/sales">Vendas</a>
-        <a href="/repairs">Consertos</a>
-        <a href="/logout" className="logout">Sair</a>
+        <a href="/repairs">Manutenções</a>
+        <a href="/login" className="logout">Sair</a>
       </nav>
     </header>
   )
