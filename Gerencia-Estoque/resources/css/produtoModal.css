@@ -127,3 +127,10 @@ input:focus, select:focus{
   font-size:12px;
   color:var(--muted);
 }
+
+.danger{
+  background: var(--danger);
+}
+.danger:hover{
+  background: var(--dangerHover);
+}

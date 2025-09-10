@@ -46,17 +46,47 @@ class ProductController extends Controller{
   }
 
   public function store(ProductStoreRequest $request){
-    $product = Product::create($request->validated());
-    return response()->json(['data' => new ProductResource($product)], 201);
+    // Se precisar tratar vírgula em preço (pt-BR):
+    $data = $request->validated();
+    if(isset($data['sale_price'])){
+      $data['sale_price'] = str_replace(',', '.', $data['sale_price']);
+    }
+
+    $product = Product::create($data);
+
+    if($request->expectsJson()){
+      return response()->json(['data' => new ProductResource($product)], 201);
+    }
+
+    return redirect('/products')->with('success', 'Produto criado!');
   }
 
   public function update(ProductUpdateRequest $request, Product $product){
-    $product->update($request->validated());
-    return response()->json(['data' => new ProductResource($product)]);
+    // normaliza vírgula para ponto, se quiser manter input pt-BR
+    $data = $request->validated();
+    if(isset($data['sale_price'])){
+      $data['sale_price'] = str_replace(',', '.', $data['sale_price']);
+    }
+    if(isset($data['cost_price'])){
+      $data['cost_price'] = str_replace(',', '.', $data['cost_price']);
+    }
+
+    $product->update($data);
+
+    if($request->expectsJson()){
+      return response()->json(['data' => new ProductResource($product)]);
+    }
+
+    return redirect('/products')->with('success', 'Produto atualizado!');
   }
 
   public function destroy(Product $product){
     $product->delete();
-    return response()->json(['data' => true]);
+    
+    if(request()->expectsJson()){
+      return response()->json(['data' => true]);
+    }
+
+    return redirect('/products')->with('success', 'Produto excluído!');
   }
 }

@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Navbar from "./includes/navbar.jsx";
-import api from "./lib/api.js";
 import "../css/home.css";
 
-function Home() {
+function Home(){
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -26,45 +25,32 @@ function Home() {
 
       try {
         const [mRes, lRes] = await Promise.all([
-          api.get("/dashboard"),
-          api.get("/products", { params: { low: 1, per_page: 5 } }),
+          fetch("/dashboard/metrics", { headers: { Accept: "application/json" } }),
+          fetch("/products/list?low=1&per_page=5", { headers: { Accept: "application/json" } }),
         ]);
         if (canceled) return;
 
-        const m = mRes.data ?? {};
-        const list = Array.isArray(lRes.data?.data) ? lRes.data.data : [];
+        if (!mRes.ok || !lRes.ok) {
+          throw new Error(`HTTP ${mRes.status}/${lRes.status}`);
+        }
+
+        const m = await mRes.json();
+        const l = await lRes.json();
 
         setMetrics({
-          salesToday: Number(m.salesToday || 0),
-          repairsToday: Number(m.repairsToday || 0),
-          revenueToday: Number(m.revenueToday || 0),
-          lowStockCount: Number(m.lowStockCount || 0),
+          salesToday: Number(m?.salesToday || 0),
+          repairsToday: Number(m?.repairsToday || 0),
+          revenueToday: Number(m?.revenueToday || 0),
+          lowStockCount: Number(m?.lowStockCount || 0),
         });
-        setLowStock(list);
+
+        setLowStock(Array.isArray(l?.data) ? l.data : []);
       } catch (err) {
         if (canceled) return;
-
-        // NÃO redireciona. Só informa o erro.
-        const status = err?.response?.status;
-        const msg =
-          status === 401
-            ? "Não autenticado. Faça login para ver os dados."
-            : status === 404
-            ? "API não encontrada (verifique a rota /api/v1)."
-            : "Não foi possível carregar os dados agora.";
-        setError(msg);
-
-        // zera telas
+        setError("Não foi possível carregar os dados agora.");
         setMetrics({ salesToday: 0, repairsToday: 0, revenueToday: 0, lowStockCount: 0 });
         setLowStock([]);
-
-        // ajuda na inspeção
-        console.log("Dashboard error:", {
-          status,
-          data: err?.response?.data,
-          url: err?.config?.url,
-          baseURL: err?.config?.baseURL,
-        });
+        console.log("Dashboard error:", err);
       } finally {
         if (!canceled) setLoading(false);
       }
@@ -102,7 +88,7 @@ function Home() {
           </div>
 
           <div className={`card ${metrics.lowStockCount > 0 ? "danger" : ""}`}>
-            <div className="card-label">Itens com baixo estoque</div>
+            <div className="card-label">Items com baixo estoque</div>
             <div className="card-value">{loading ? "..." : metrics.lowStockCount}</div>
             {metrics.lowStockCount > 0 && (
               <a className="card-link" href="/products?f=low">ver todos</a>
@@ -113,7 +99,6 @@ function Home() {
         <section className="panel">
           <div className="panel-head">
             <h2>Baixo estoque</h2>
-            <a className="btn" href="/products?create=1">+ Novo produto</a>
           </div>
 
           <div className="table-wrap">
@@ -141,9 +126,6 @@ function Home() {
                       <td>{p.category || "-"}</td>
                       <td className="right">{p.stock}</td>
                       <td className="right">{p.min_stock}</td>
-                      <td className="action">
-                        <a className="link" href={`/products/${p.id}/edit`}>Editar</a>
-                      </td>
                     </tr>
                   ))
                 )}
