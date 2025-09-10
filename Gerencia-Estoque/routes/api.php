@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+/* use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ClientController;
@@ -24,4 +24,4 @@ Route::prefix('v1')->group(function () {
         Route::get('/sales',   [SaleController::class, 'index']);
         Route::get('/repairs', [RepairController::class, 'index']);
     });
-});
+}); */

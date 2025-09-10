@@ -10,7 +10,6 @@ function Login(){
 
   async function handleSubmit(e){
     e.preventDefault();
-    setErro("");
     setLoading(true);
 
     try {

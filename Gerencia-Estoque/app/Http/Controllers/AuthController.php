@@ -4,78 +4,52 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller{
-  // regra: min 8, 1 maiúscula, 1 número, 1 especial
-  private const STRONG_PASSWORD_REGEX = '/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/';
+  private const STRONG_PASS = '/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/';
 
-  public function register(Request $request): JsonResponse{
+  public function register(Request $request){
     $data = $request->validate([
-        'name'     => ['required','string','max:255'],
-        'email'    => ['required','email','max:255', Rule::unique('users','email')],
-        'password' => ['required','string','regex:'.self::STRONG_PASSWORD_REGEX],
-      ],
-      [
-        'password.regex' => 'A senha deve ter 8+ caracteres, 1 maiúscula, 1 número e 1 símbolo.',
-      ]
-    );
+      'name'     => 'required|string|max:255',
+      'email'    => ['required','email','max:255', Rule::unique('users')],
+      'password' => ['required','regex:'.self::STRONG_PASS],
+    ]);
 
     $user = User::create([
       'name'     => $data['name'],
       'email'    => $data['email'],
       'password' => Hash::make($data['password']),
-      'role'     => 'rep', // padrão
+      'role'     => 'rep',
     ]);
 
     Auth::login($user);
 
-    return response()->json([
-      'ok' => true,
-      'redirect' => '/login',
-      'user' => [
-        'id' => $user->id,
-        'name' => $user->name,
-        'email' => $user->email,
-        'role' => $user->role,
-      ],
-    ], 201);
+    return response()->json(['ok' => true, 'user' => $user], 201);
   }
 
-  public function login(Request $request): JsonResponse{
+  public function login(Request $request){
     $credentials = $request->validate([
-      'email'    => ['required','email'],
-      'password' => ['required','string'],
+      'email'    => 'required|email',
+      'password' => 'required',
     ]);
 
-    if (!Auth::attempt($credentials, true)) {
-      return response()->json([
-        'ok' => false,
-        'message' => 'Credenciais inválidas.',
-      ], 401);
+    if (!Auth::attempt($credentials)) {
+      return response()->json(['ok' => false, 'message' => 'Credenciais inválidas'], 401);
     }
 
     $request->session()->regenerate();
 
-    return response()->json([
-      'ok' => true,
-      'redirect' => '/',
-    ]);
-
+    return response()->json(['ok' => true, 'user' => Auth::user()]);
   }
 
-  public function logout(Request $request): JsonResponse{
+  public function logout(Request $request){
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
-    return response()->json([
-      'ok' => true,
-      'redirect' => '/login',
-    ]);
+    return response()->json(['ok' => true]);
   }
-
 }

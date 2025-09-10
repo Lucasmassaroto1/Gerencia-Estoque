@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Navbar from "./includes/navbar.jsx";
 import '../css/home.css';
+import '../css/produtoModal.css';
 
 function Products(){
   const [q, setQ] = useState("");
@@ -24,7 +25,7 @@ function Products(){
       <main className="container">
         <div className="title-row">
           <h1>Produtos</h1>
-          <a className="btn" href="/products/create">+ Novo produto</a>
+          {/* <a className="btn" href="/products/create">+ Novo produto</a> */}
         </div>
 
         <div style={{marginTop:12, display:'flex', gap:8}}>
@@ -34,7 +35,17 @@ function Products(){
         </div>
 
         <section className="panel" style={{marginTop:16}}>
-          <div className="panel-head"><h2>Lista</h2></div>
+          <div className="panel-head"><h2>Lista</h2>
+            
+            {/* INICIO ABRE MODAL */}
+            <div className="actions">
+              <a href="#novo-produto" className="btn primary">
+                + Novo produto
+              </a>
+            </div>
+            {/* FIM ABRE MODAL */}
+
+          </div>
           <div className="table-wrap">
             <table>
               <thead>
@@ -63,9 +74,75 @@ function Products(){
             </table>
           </div>
         </section>
+
+         {/* ======= Bloco do modal CSS-only ======= */}
+        <section id="novo-produto" className="modal" aria-labelledby="titulo-modal" aria-modal="true" role="dialog">
+          <a href="#" className="modal__overlay" aria-label="Fechar"></a>
+
+          <div className="modal__panel">
+            <a className="modal__close" href="#" aria-label="Fechar">
+              ✕
+            </a>
+            <h2 id="titulo-modal" className="modal__title">
+              Adicionar produto
+            </h2>
+            <p className="modal__desc">Preencha os campos abaixo e salve.</p>
+
+            <form method="post" action="/products">
+              <div className="grid">
+                <div className="field" style={{ gridColumn: "span 12" }}>
+                  <label htmlFor="produto">Produto</label>
+                  <input id="produto" name="produto" type="text" placeholder="Ex.: Teclado Mecânico RGB" required/>
+                  <span className="helper">Nome comercial para identificação.</span>
+                </div>
+
+                <div className="field half">
+                  <label htmlFor="sku">SKU</label>
+                  <input id="sku" name="sku" type="text" placeholder="Ex.: TEC-RGB-87" required/>
+                </div>
+                <div className="field half">
+                  <label htmlFor="categoria">Categoria</label>
+                  <select id="categoria" name="categoria" required defaultValue="">
+                    <option value="" disabled>
+                      Selecione...
+                    </option>
+                    <option>Periféricos</option>
+                    <option>Hardware</option>
+                    <option>Acessórios</option>
+                    <option>Outros</option>
+                  </select>
+                </div>
+
+                <div className="field third">
+                  <label htmlFor="estoque">Estoque</label>
+                  <input id="estoque" name="estoque" type="number" min="0" step="1" placeholder="0" required/>
+                </div>
+                <div className="field third">
+                  <label htmlFor="minimo">Mínimo</label>
+                  <input id="minimo" name="minimo" type="number" min="0" step="1" placeholder="5" required/>
+                </div>
+                <div className="field third">
+                  <label htmlFor="preco">Preço</label>
+                  <input id="preco" name="preco" type="number" inputMode="decimal" min="0" step="0.01" placeholder="0,00" required/>
+                </div>
+              </div>
+
+              <div className="form__actions">
+                <a href="#" className="btn">
+                  Cancelar
+                </a>
+                <button type="submit" className="btn primary">
+                  Salvar
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </section>
+        {/* ======= /modal ======= */}
       </main>
     </div>
   );
 }
 
-createRoot(document.getElementById('app')).render(<Products />);
+createRoot(document.getElementById("app")).render(<Products />);

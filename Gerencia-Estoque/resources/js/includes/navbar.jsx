@@ -1,6 +1,29 @@
 import React from 'react';
 
 export default function Navbar(){
+  async function handleLogout(e) {
+    e.preventDefault();
+
+    try {
+      await fetch("/logout", {
+        method: "POST",
+        credentials: "same-origin", // se front e back no mesmo domínio/porta
+        headers: {
+          "X-CSRF-TOKEN": document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute("content") || "",
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+    } catch (err) {
+      console.error("Erro ao deslogar:", err);
+    } finally {
+      window.location.href = "/login";
+    }
+  }
   return(
     <header className="topbar">
       <div className="brand">
@@ -12,7 +35,7 @@ export default function Navbar(){
         <a href="/clients">Clientes</a>
         <a href="/sales">Vendas</a>
         <a href="/repairs">Manutenções</a>
-        <a href="/login" className="logout">Sair</a>
+        <a href="/logout" className="logout" onClick={handleLogout}>Sair</a>
       </nav>
     </header>
   )
