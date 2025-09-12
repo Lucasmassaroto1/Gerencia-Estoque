@@ -13,7 +13,7 @@ use App\Models\Client;
 class SaleController extends Controller{
   public function index(Request $request){
     $date = $request->query('date'); // YYYY-MM-DD
-
+    
     $query = Sale::query()
       ->with('client')
       ->where('representative_id', auth()->id());
@@ -31,7 +31,14 @@ class SaleController extends Controller{
         });
       }
 
-      $items = $query->orderByDesc('id')->get()->map(function ($s){
+    $paidTotal = (clone $query)
+      ->where('status', 'paid')
+      ->sum('total_amount');
+
+    $items = (clone $query)
+      ->orderByDesc('id')
+      ->get()
+      ->map(function ($s) {
         return [
           'id' => $s->id,
           'client' => optional($s->client)->name,
@@ -41,7 +48,10 @@ class SaleController extends Controller{
         ];
       });
 
-    return response()->json(['data' => $items]);
+    return response()->json([
+      'data' => $items,
+      'meta' => ['paid_total' => (float) $paidTotal],
+    ]);
   }
 
   public function store(Request $request){

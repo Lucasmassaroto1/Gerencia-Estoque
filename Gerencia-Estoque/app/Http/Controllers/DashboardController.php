@@ -11,9 +11,24 @@ class DashboardController extends Controller{
   public function index(){
     $today = now()->toDateString();
 
-    $salesToday = Sale::whereDate('created_at', $today)->count();
+    $salesToday = Sale::where('status', 'paid')
+    ->where(function($q) use ($today){
+      $q->whereDate('sold_at', $today)
+        ->orWhereDate('created_at', $today);
+    })
+    ->count();
+
     $repairsToday = Repair::whereDate('created_at', $today)->count();
-    $revenueToday = (float) Sale::whereDate('created_at', $today)->sum('total_amount');
+
+
+    $revenueToday = (float) Sale::where('status', 'paid')
+    ->where(function($q) use ($today){
+      $q->whereDate('sold_at', $today)
+        ->orWhereDate('created_at', $today);
+    })
+    ->sum('total_amount');
+
+
     $lowStockCount = Product::whereColumn('stock','<','min_stock')->count();
 
     return response()->json([

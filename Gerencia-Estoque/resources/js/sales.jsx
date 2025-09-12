@@ -10,6 +10,8 @@ function Sales(){
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
+  const [paidTotal, setPaidTotal] = useState(0);
+
   // ===== modal state =====
   const [mode, setMode] = useState("create"); // "create" | "show"
 
@@ -33,9 +35,11 @@ function Sales(){
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setRows(Array.isArray(data?.data) ? data.data : []);
+      setPaidTotal(Number(data?.meta?.paid_total ?? 0));
     } catch(e) {
       setErr("Não foi possível carregar as vendas.");
       setRows([]);
+      setPaidTotal(0);
       console.log(e);
     } finally {
       setLoading(false);
@@ -58,7 +62,9 @@ function Sales(){
   }
 
   useEffect(() => { load(); }, []);
-  const totalDia = rows.reduce((acc, s) => acc + (s.total || 0), 0);
+  const totalDia = rows
+    .filter(s => s.status === "paid")
+    .reduce((acc, s) => acc + (s.total || 0), 0);
 
   // ===== abrir modal: criar =====
   function openModalNovaVenda(){
@@ -111,7 +117,7 @@ function Sales(){
               <div style={{marginTop:12, display:'flex', gap:8, alignItems:'center'}}>
                 <input type="date" value={date} onChange={e=>setDate(e.target.value)}/>
                 <button className="btn" onClick={load}>Filtrar</button>
-                <div className="badge">Total do dia: R$ {totalDia.toFixed(2).replace('.',',')}</div>
+                <div className="badge">Total pago do dia: R$ {totalDia.toFixed(2).replace('.',',')}</div>
               </div>
             </div>
             <a className="btn" href="#sale-modal" onClick={openModalNovaVenda}>+ Nova venda</a>

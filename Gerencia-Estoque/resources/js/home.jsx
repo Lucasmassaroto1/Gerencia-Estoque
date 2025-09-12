@@ -70,17 +70,23 @@ function Home(){
         {error && <div className="alert">{error}</div>}
 
         <section className="grid-cards">
-          <div className="card">
+          <div className={`card ${metrics.salesToday > 0 ? "success" : "danger"}`}>
             <div className="card-label">Vendas (hoje)</div>
             <div className="card-value">{loading ? "..." : metrics.salesToday}</div>
+            {metrics.salesToday > 0 && (
+              <a className={`card-link ${metrics.salesToday > 0 ? "success" : "danger"}`} href="/sales?f=low">Detalhes</a>
+            )}
           </div>
 
-          <div className="card">
+          <div className={`card ${metrics.repairsToday > 0 ? "success" : "danger"}`}>
             <div className="card-label">Manutenções (hoje)</div>
             <div className="card-value">{loading ? "..." : metrics.repairsToday}</div>
+            {metrics.repairsToday > 0 && (
+              <a className={`card-link ${metrics.repairsToday > 0 ? "success" : "danger"}`} href="/sales?f=low">Detalhes</a>
+            )}
           </div>
 
-          <div className="card">
+          <div className={`card ${metrics.revenueToday > 0 ? "success" : "danger"}`}>
             <div className="card-label">Faturado (hoje)</div>
             <div className="card-value">
               {loading ? "..." : `R$ ${Number(metrics.revenueToday).toFixed(2).replace(".", ",")}`}

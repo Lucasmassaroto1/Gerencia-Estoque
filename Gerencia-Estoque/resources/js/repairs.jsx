@@ -23,8 +23,8 @@ function Repairs(){
       <Navbar />
       <main className="container">
         <div className="title-row">
-          <h1>Consertos</h1>
-          <a className="btn" href="/repairs/create">+ Novo conserto</a>
+          <h1>Manutenções</h1>
+          <a className="btn" href="/repairs/create">+ Nova manutenção</a>
         </div>
 
         <div style={{marginTop:12, display:'flex', gap:8, alignItems:'center'}}>
@@ -43,7 +43,7 @@ function Repairs(){
                 {loading ? (
                   <tr><td colSpan="7" className="muted">Carregando...</td></tr>
                 ) : items.length===0 ? (
-                  <tr><td colSpan="7" className="muted">Nenhum conserto.</td></tr>
+                  <tr><td colSpan="7" className="muted">Nenhuma manutenção no momento.</td></tr>
                 ) : items.map(r=>(
                   <tr key={r.id}>
                     <td>#{r.id}</td>

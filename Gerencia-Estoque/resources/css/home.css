@@ -8,6 +8,9 @@
   --primary-2:#4f46e5;
   --danger:#ef4444;
   --dangerHover:rgb(243, 86, 86);
+
+  --card-danger: rgba(239,68,68,.6);
+  --card-success: rgb(1, 148, 1);
 }
 
 *{
@@ -122,7 +125,10 @@ body{
 }
 
 .card.danger{
-  border-color: rgba(239,68,68,.6);
+  border-color: var(--card-danger);
+}
+.card.success{
+  border-color: var(--card-success);
 }
 
 .card-label{
@@ -140,6 +146,10 @@ body{
   display:inline-block;
   margin-top:8px;
   color:#fecaca;
+  text-decoration:underline;
+}
+.card-link.success{
+  color: var(--card-success);
   text-decoration:underline;
 }
 
@@ -229,4 +239,97 @@ input, input[type="date"]{
 input:focus, input[type="date"]:focus, input:hover{
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+/* ===========================
+   RESPONSIVIDADE
+   =========================== */
+
+/* Dispositivos pequenos (até 600px) */
+@media (max-width: 600px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .container {
+    margin: 16px auto;
+    padding: 0 12px;
+  }
+
+  .title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .title-row h1 {
+    font-size: 20px;
+  }
+
+  .badge {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .grid-cards {
+    grid-template-columns: 1fr; /* sempre 1 card por linha */
+  }
+
+  .card-value {
+    font-size: 22px;
+  }
+
+  table {
+    font-size: 14px;
+  }
+
+  thead th, tbody td {
+    padding: 8px;
+  }
+
+  input, input[type="date"] {
+    width: 100%;
+  }
+}
+
+/* Dispositivos médios (600px – 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .grid-cards {
+    grid-template-columns: repeat(2, 1fr); /* 2 colunas */
+  }
+
+  .title-row h1 {
+    font-size: 24px;
+  }
+
+  .card-value {
+    font-size: 26px;
+  }
+
+  table {
+    font-size: 15px;
+  }
+}
+
+/* Dispositivos grandes (1024px+) */
+@media (min-width: 1025px) {
+  .grid-cards {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .title-row h1 {
+    font-size: 28px;
+  }
+
+  .card-value {
+    font-size: 28px;
+  }
 }
