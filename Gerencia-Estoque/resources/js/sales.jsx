@@ -16,7 +16,7 @@ function Sales(){
   // create
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
-  const [status, setStatus] = useState("paid");
+  const [status, setStatus] = useState("open");
   const [soldAt, setSoldAt] = useState(new Date().toISOString().slice(0,10));
   const [clientId, setClientId] = useState("");
   const [items, setItems] = useState([{ product_id: "", qty: "1", unit_price: "" }]);
@@ -64,7 +64,7 @@ function Sales(){
   function openModalNovaVenda(){
     setMode("create");
     setClientId("");
-    setStatus("paid");
+    setStatus("open");
     setSoldAt(new Date().toISOString().slice(0,10));
     setItems([{ product_id:"", qty:"1", unit_price:"" }]);
     loadOptions();
@@ -154,7 +154,7 @@ function Sales(){
             {mode === "create" ? (
               <>
                 <h2 id="titulo-venda" className="modal__title">Nova venda</h2>
-                <p className="modal__desc">Ao fazer uma nova venda, o estoque fará a baixa dos produtos automaticamente.</p>
+                <p className="modal__desc">O estoque fará a baixa dos produtos se a venda estiver como <b>Pago</b>.</p>
 
                 <form method="post" action="/sales">
                   <input type="hidden" name="_token" value={window.csrfToken} />
@@ -168,8 +168,8 @@ function Sales(){
                     <div className="field half">
                       <label htmlFor="status">Status</label>
                       <select id="status" name="status" value={status} onChange={e=>setStatus(e.target.value)}>
-                        <option value="paid">Pago</option>
                         <option value="open">Pendente</option>
+                        <option value="paid">Pago</option>
                         <option value="canceled">Cancelado</option>
                       </select>
                     </div>
@@ -247,6 +247,23 @@ function Sales(){
               <>
                 <h2 className="modal__title">Detalhes da venda #{viewSale?.id ?? ""}</h2>
                 <p className="modal__desc">Cliente: <b>{viewSale?.client ?? "-"}</b> &nbsp;•&nbsp; Status: <b>{viewSale?.status}</b> &nbsp;•&nbsp; Data: <b>{viewSale?.sold_at}</b></p>
+
+                {/* Form para mudar o status */}
+                {viewSale?.id && (
+                  <form method="post" action={`/sales/${viewSale.id}`} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+                    <input type="hidden" name="_token" value={window.csrfToken}/>
+                    <input type="hidden" name="_method" value="PUT"/>
+                    <label htmlFor="new_status" style={{ fontWeight: 600 }}>status:</label>
+                    <select id="new_status" name="status" defaultValue={viewSale.status}>
+                      <option value="open">Pendente</option>
+                      <option value="paid">Pago</option>
+                      <option value="canceled">Cancelado</option>
+                    </select>
+                    <button type="submit" className="btn primary">
+                      Atualizar status
+                    </button>
+                  </form>
+                )}
 
                 <div className="table-wrap">
                   <table>

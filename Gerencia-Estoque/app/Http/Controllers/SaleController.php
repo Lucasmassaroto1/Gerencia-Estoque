@@ -48,7 +48,7 @@ class SaleController extends Controller{
     $data = $request->validate([
         'client_id' => ['required','exists:clients,id'],
         'sold_at' => ['nullable','date'],
-        'status' => ['nullable','string','max:50'],
+        'status' => ['nullable','in:open,paid,canceled'],
         'items' => ['required','array','min:1'],
         'items.*.product_id' => ['required','exists:products,id'],
         'items.*.qty' => ['required','integer','min:1'],
@@ -60,16 +60,14 @@ class SaleController extends Controller{
       ->where('user_id', auth()->id())
       ->first();
 
-    if(!$client){
-      abort(403, 'Cliente não pertence a você.');
-    }
+    $status = $data['status'] ?? 'open';
 
     /** @var \App\Models\Sale $sale */
-    $sale = DB::transaction(function () use ($data){
+    $sale = DB::transaction(function () use ($data, $status){
       $sale = Sale::create([
         'representative_id' => auth()->id(),
         'client_id' => $data['client_id'],
-        'status' => $data['status'] ?? 'paid',
+        'status' => $status,
         'sold_at' => $data['sold_at'] ?? now(),
         'total_amount' => 0,
       ]);
@@ -98,13 +96,18 @@ class SaleController extends Controller{
         'subtotal' => $qty * $unit,
       ]);
 
-      // baixa estoque
-      $product->decrement('stock', $qty);
+      if($status === 'paid'){
+        $p = Product::where('id', $product->id)->lockForUpdate()->first();
+        if($p->stock < $qty){
+          throw ValidationException::withMessages([
+            "items.$i.qty" => "Estoque insuficiente para {$p->name} (disp.: {$p->stock}).",
+          ]);
+        }
+        $p->decrement('stock', $qty);
+      }
     }
 
       $sale->recalcTotal();
-
-      // opcional: recarrega relacionamentos/campos
       return $sale->fresh();
     });
 
@@ -125,10 +128,45 @@ class SaleController extends Controller{
     abort_if($sale->representative_id !== auth()->id(), 403);
 
     $data = $request->validate([
-      'status' => ['required','string','max:50']
+      'status' => ['required','in:open,paid,canceled']
     ]);
 
-    $sale->update(['status' => $data['status']]);
+    $old = $sale->status;
+    $new = $data['status'];
+
+    if($old === $new){
+      return $request->expectsJson()
+        ? response()->json(['data' => true])
+        : redirect('/sales')->with('success', 'Nada a atualizar.');
+    }
+
+    DB::transaction(function () use ($sale, $old, $new){
+      $sale->load('items');
+
+      // Se PAGO: baixar estoque (valida tudo antes)
+      if(in_array($old, ['open','canceled']) && $new === 'paid'){
+        foreach($sale->items as $it){
+          $p = Product::where('id', $it->product_id)->lockForUpdate()->firstOrFail();
+          if($p->stock < $it->qty){
+            throw ValidationException::withMessages([
+              'status' => "Estoque insuficiente para {$p->name} (disp.: {$p->stock}).",
+            ]);
+          }
+        }
+        foreach($sale->items as $it){
+          Product::where('id', $it->product_id)->lockForUpdate()->decrement('stock', $it->qty);
+        }
+      }
+
+      // Se NÃO PAGO: devolver estoque
+      if($old === 'paid' && in_array($new, ['open','canceled'])){
+        foreach($sale->items as $it){
+          Product::where('id', $it->product_id)->lockForUpdate()->increment('stock', $it->qty);
+        }
+      }
+
+      $sale->update(['status' => $new]);
+    });
 
     if($request->expectsJson()){
       return response()->json(['data' => true]);
@@ -140,9 +178,15 @@ class SaleController extends Controller{
     abort_if($sale->representative_id !== auth()->id(), 403);
 
     DB::transaction(function () use ($sale){
-      foreach ($sale->items as $it){
-        Product::where('id', $it->product_id)->lockForUpdate()->increment('stock', $it->qty);
+      $sale->load('items');
+
+      // devolve estoque somente se estava pago
+      if($sale->status === 'paid'){
+        foreach($sale->items as $it){
+          Product::where('id', $it->product_id)->lockForUpdate()->increment('stock', $it->qty);
+        }
       }
+
       $sale->items()->delete();
       $sale->delete();
     });
