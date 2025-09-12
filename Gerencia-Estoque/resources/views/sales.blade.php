@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Armazium - Vendas</title>
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script>window.csrfToken = "{{ csrf_token() }}";</script>
   @viteReactRefresh
   @vite('resources/js/sales.jsx')
 </head>

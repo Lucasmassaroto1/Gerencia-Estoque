@@ -13,8 +13,8 @@ class ClientStoreRequest extends FormRequest{
     return[
       'name'  => ['required','string','max:255'],
       'email' => ['nullable','email','max:255'],
-      'phone' => ['nullable','string','max:20'],
-      'notes' => ['nullable','string'],
+      'phone' => ['nullable','string','max:50'],
+      'notes' => ['nullable','string','max:2000'],
     ];
   }
 }

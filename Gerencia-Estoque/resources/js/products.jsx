@@ -5,61 +5,6 @@ import '../css/home.css';
 import '../css/produtoModal.css';
 
 function Products(){
-  /* const [q, setQ] = useState("");
-  const [low, setLow] = useState(0); // 0 ou 1
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  async function load(next = {}) {
-    const qParam   = next.q   ?? q;
-    const lowParam = next.low ?? low;
-
-    setLoading(true);
-    const qs = new URLSearchParams();
-    if (qParam) qs.set("q", qParam);
-    if (lowParam) qs.set("low", String(lowParam));
-
-    const res = await fetch(`/products/list${qs.toString() ? `?${qs}` : ""}`, {
-      headers: { Accept: "application/json" },
-    });
-    const data = await res.json();
-    setItems(Array.isArray(data?.data) ? data.data : []);
-    setLoading(false);
-  }
-
-  useEffect(() => { load(); }, []); */
-
-  /* const [q, setQ] = useState("");
-  const [low, setLow] = useState(0);
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  async function load(next = {}) {
-    const qParam   = next.q   ?? q;
-    const lowParam = next.low ?? low;
-
-    setLoading(true);
-    const qs = new URLSearchParams();
-    if (qParam) qs.set("q", qParam);
-    if (lowParam) qs.set("low", String(lowParam));
-
-    const res = await fetch(`/products/list${qs.toString() ? `?${qs}` : ""}`, {
-      headers: { Accept: "application/json" },
-    });
-    const data = await res.json();
-    setItems(Array.isArray(data?.data) ? data.data : []);
-    setLoading(false);
-  }
-
-  useEffect(() => { load(); }, []);
-
-  function toggleLow(){
-    const next = low === 1 ? 0 : 1;
-    setLow(next);
-    setQ("");
-    load({ low: next, q: "" });
-  } */
-
   const [q, setQ] = useState("");
   const [low, setLow] = useState(0);
   const [items, setItems] = useState([]);
@@ -137,7 +82,6 @@ function Products(){
         <div style={{marginTop:12, display:'flex', gap:8}}>
           <input placeholder="Buscar por nome ou SKU..." value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==='Enter' && load({q})}/>
           <button className="btn" onClick={() => load({ q })}>Buscar</button>
-          {/* <button className="btn" onClick={() => { setLow(1); load({ low: 1, q: "" }); setQ(""); }}>Baixo estoque</button> */}
 
           <button className="btn" onClick={toggleLow} aria-pressed={low === 1} title={low === 1 ? "Mostrando apenas baixo estoque" : "Mostrar apenas baixo estoque"}>{low === 1 ? "Ver todos" : "Estoque Baixo"}</button>
         </div>
@@ -187,7 +131,7 @@ function Products(){
           </div>
         </section>
 
-        {/* ======= Modal CSS-only (criar e editar) ======= */}
+        {/* ======= Modal CSS-only (criar, editar e excluir) ======= */}
         <section id="novo-produto" className="modal" aria-labelledby="titulo-modal" aria-modal="true" role="dialog">
           <a href="#" className="modal__overlay" aria-label="Fechar"></a>
 
@@ -243,7 +187,7 @@ function Products(){
               </div>
 
               <div className="form__actions">
-                {/* 🔴 Form EXCLUIR aparece só em modo edição */}
+                {/* Form EXCLUIR aparece só em modo edição */}
                 {mode === "edit" && (
                   <form method="post" action={`/products/${editingId}`} onSubmit={(e)=>{ if(!confirm("Tem certeza que deseja excluir este produto?")) e.preventDefault(); }}>
                     <input type="hidden" name="_token" value={window.csrfToken}/>

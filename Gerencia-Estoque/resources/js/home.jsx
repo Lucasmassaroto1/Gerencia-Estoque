@@ -98,7 +98,7 @@ function Home(){
 
         <section className="panel">
           <div className="panel-head">
-            <h2>Baixo estoque</h2>
+            <h2>Estoque baixo</h2>
           </div>
 
           <div className="table-wrap">

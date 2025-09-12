@@ -10,12 +10,14 @@ use App\Http\Requests\ClientUpdateRequest;
 class ClientController extends Controller{
   public function index(Request $request){
     $per = (int)$request->query('per_page', 50);
-    $q   = trim((string)$request->query('q', ''));
+    $q = trim((string)$request->query('q', ''));
 
-    $query = Client::query()->orderBy('name');
+    $query = Client::query()
+      ->where('user_id', auth()->id()) // mostra somente os clientes do representante
+      ->orderBy('name');
 
     if($q !== ''){
-      $query->where(function ($w) use ($q) {
+      $query->where(function ($w) use ($q){
         $w->where('name','like',"%{$q}%")
           ->orWhere('email','like',"%{$q}%")
           ->orWhere('phone','like',"%{$q}%");
@@ -28,14 +30,15 @@ class ClientController extends Controller{
       'data' => $paginator->items(),
       'meta' => [
         'current_page' => $paginator->currentPage(),
-        'per_page'     => $paginator->perPage(),
-        'total'        => $paginator->total(),
-        'last_page'    => $paginator->lastPage(),
+        'per_page' => $paginator->perPage(),
+        'total' => $paginator->total(),
+        'last_page' => $paginator->lastPage(),
       ],
     ]);
   }
 
   public function show(Client $client){
+    abort_if($client->user_id !== auth()->id(), 403);
     return response()->json(['data' => $client]);
   }
 
@@ -44,16 +47,31 @@ class ClientController extends Controller{
     $payload['user_id'] = auth()->id();
     $client = Client::create($payload);
 
-    return response()->json(['data' => $client], 201);
+    if($request->expectsJson()){
+      return response()->json(['data' => $client], 201);
+    }
+    return redirect('/clients')->with('success', 'Cliente criado!');
   }
 
   public function update(ClientUpdateRequest $request, Client $client){
+    abort_if($client->user_id !== auth()->id(), 403);
+
     $client->update($request->validated());
-    return response()->json(['data' => $client]);
+
+    if($request->expectsJson()){
+      return response()->json(['data' => $client]);
+    }
+    return redirect('/clients')->with('success', 'Cliente atualizado!');
   }
 
   public function destroy(Client $client){
+    abort_if($client->user_id !== auth()->id(), 403);
+
     $client->delete();
-    return response()->json(['data' => true]);
+
+    if(request()->expectsJson()){
+      return response()->json(['data' => true]);
+    }
+    return redirect('/clients')->with('success', 'Cliente excluído!');
   }
 }
